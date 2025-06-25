@@ -1,0 +1,25 @@
+subject,day,serum,urine
+Subject 1,0,405,
+Subject 1,5,354,173
+Subject 1,60,71,14
+Subject 1,180,LOQ,LOQ
+Subject 2,0,92,
+Subject 2,2,88,12
+Subject 2,49,19,LOQ
+Subject 2,175,LOQ,LOQ
+Subject 3,0,239,
+Subject 3,8,166,110
+Subject 3,57,16,6
+Subject 3,175,LOQ,LOQ
+Subject 4,0,347,
+Subject 4,5,313,5
+Subject 4,60,108,9
+Subject 4,180,7,LOQ
+Subject 5,0,921,
+Subject 5,5,725,102
+Subject 5,62,190,12
+Subject 5,180,25,LOQ
+Subject 6,0,378,
+Subject 6,5,361,39
+Subject 6,62,167,LOQ
+Subject 6,180,20,LOQ
