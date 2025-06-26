@@ -1,0 +1,5 @@
+"scenario","substance","solver","final_plasma_conc","n_timepoints","final_time"
+"Scenario1","PFHxA","lsoda",20.900054774488,12,10
+"Scenario2","PFHxA","lsoda",20.9000547570215,102,10
+"Scenario3","PFHxA","lsoda",163.378034511771,1827,1825
+"Scenario4","PFBS","lsoda",1507.06904315063,366,365

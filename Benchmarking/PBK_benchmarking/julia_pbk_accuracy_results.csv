@@ -1,0 +1,5 @@
+scenario,final_time,substance,solver,final_plasma_conc,n_timepoints
+Scenario1,10.0,PFHxA,Tsit5,20.900054766353723,13
+Scenario2,10.0,PFHxA,Tsit5,20.900054766353723,103
+Scenario3,301.0,PFHxA,Tsit5,142.69414784621225,304
+Scenario4,365.0,PFBS,Rodas4,1392.2002992540336,378

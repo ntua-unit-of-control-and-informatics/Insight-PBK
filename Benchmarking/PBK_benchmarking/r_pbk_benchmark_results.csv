@@ -1,0 +1,13 @@
+"scenario","substance","solver","description","mean_time_ms","median_time_ms","std_time_ms","min_time_ms","max_time_ms","n_samples","n_timepoints"
+"Scenario1","PFHxA","lsoda","10 days, timestep 1 day, PFHxA",36.657075,31.00092,9.93683115350618,30.839544,48.130761,3,11
+"Scenario1","PFHxA","lsodes","10 days, timestep 1 day, PFHxA",17.7323086666667,17.439719,0.82836225919602,17.089948,18.667259,3,11
+"Scenario1","PFHxA","bdf","10 days, timestep 1 day, PFHxA",31.5038943333333,31.616084,0.444107734823808,31.01445,31.881149,3,11
+"Scenario2","PFHxA","lsoda","10 days, timestep 0.1 day, PFHxA",31.2547783333333,31.029456,0.712692760343707,30.681981,32.052898,3,101
+"Scenario2","PFHxA","lsodes","10 days, timestep 0.1 day, PFHxA",20.05228,20.318739,0.491249908923147,19.485373,20.352728,3,101
+"Scenario2","PFHxA","bdf","10 days, timestep 0.1 day, PFHxA",32.3978583333333,32.419889,0.236847703787334,32.150765,32.622921,3,101
+"Scenario3","PFHxA","lsoda","5 years, timestep 1 day, PFHxA",155.475143333333,154.922026,1.0887994995174,154.773934,156.72947,3,1826
+"Scenario3","PFHxA","lsodes","5 years, timestep 1 day, PFHxA",118.482497,118.121041,1.72150711727137,116.970417,120.356033,3,1826
+"Scenario3","PFHxA","bdf","5 years, timestep 1 day, PFHxA",158.462704,158.556717,0.516153328284341,157.906006,158.925389,3,1826
+"Scenario4","PFBS","lsoda","1 year, monthly dosing, PFBS",503.279564666667,478.616985,94.9563990780106,423.087692,608.134017,3,366
+"Scenario4","PFBS","lsodes","1 year, monthly dosing, PFBS",199.956480666667,200.16528,2.78837542508831,197.069575,202.634587,3,366
+"Scenario4","PFBS","bdf","1 year, monthly dosing, PFBS",367.058226333333,367.215434,1.36075046347608,365.6257,368.333545,3,366
