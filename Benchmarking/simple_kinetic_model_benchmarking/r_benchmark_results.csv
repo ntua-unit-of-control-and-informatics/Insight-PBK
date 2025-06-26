@@ -1,0 +1,4 @@
+"scenario","solver","description","mean_time_ms","median_time_ms","std_time_ms","min_time_ms","max_time_ms","n_samples","n_timepoints"
+"Scenario1","lsoda","10 days, timestep 1 day",0.5210772,0.289952,0.704495127564698,0.274987,2.524985,10,11
+"Scenario2","lsoda","10 days, timestep 0.1 day",0.6052461,0.603889,0.0275980421264102,0.574656,0.650834,10,101
+"Scenario3","lsoda","5 years, timestep 1 day",9.204254,9.2040285,0.206070679678923,8.919919,9.556157,10,1826
