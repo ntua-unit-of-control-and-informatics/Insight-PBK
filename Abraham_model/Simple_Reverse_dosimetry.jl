@@ -40,7 +40,7 @@ println("Estimated daily intake of $pfas_type based on Css of $Css ng/ml: $estim
 
 # Simulation: PFBS (Olsen et al., 2009)
 pfas_type = "PFBS"
-Css = 397 # ng/ml
+Css = 397 # ng/ml 3 average concentration at study onset
 estimated_intake_olsen_PFBS = run_inverse_abraham_kinetic_model(pfas_type, Css)
 println("Estimated daily intake of $pfas_type based on Css of $Css ng/ml: $estimated_intake_olsen_PFBS ng/kg_bw/day")
 

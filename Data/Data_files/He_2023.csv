@@ -1,7 +1,4 @@
-PFAS,Exposure,Media,Mean_ng_ml,SE
-PFHxA,Occupational,Serum,2.74,0.43
-PFBS,Occupational,Serum,266,100
-PFHxA,Occupational,Urine,18,3.57
-PFBS,Occupational,Urine,108,37.1
-PFHxA,Background,Urine,0.204,0.0148
-PFBS,Background,Urine,0.0148,0.00341
+PFAS,Exposure,Media,Mean_ng_ml,L_CI,U_CI,N
+PFBS,Occupational,Serum,67.4,39.2,90.2,60
+PFBS,Occupational,Urine,18.0,11.1,24.9,60
+PFBS,Background,Urine,0.011,0.010,0.013,60

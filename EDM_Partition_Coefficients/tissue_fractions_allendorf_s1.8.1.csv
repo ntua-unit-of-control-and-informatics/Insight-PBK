@@ -1,0 +1,16 @@
+Compartment,Volume_mL,Mass_Fraction_Percent
+Adipose,12000,24.17
+Blood,5400,10.87
+Plasma,3240,6.52
+Brain,1350,2.72
+Gonads,37,0.07
+Gut,1800,3.62
+Heart,300,0.60
+Kidney,270,0.54
+Liver,1470,2.96
+Lung,775,1.56
+Muscle,23000,46.31
+Skin,1800,3.62
+Spleen,145,0.29
+Rest_of_Body,20340,40.94
+Total_Body,70000,100.00

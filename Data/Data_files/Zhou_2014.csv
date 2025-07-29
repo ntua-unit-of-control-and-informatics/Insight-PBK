@@ -1,0 +1,9 @@
+﻿PFAS,Media,Mean,Median,SD,N
+PFHxA_Background,Serum,0,0,0,0
+PFHxA,Serum,0.41,0.28,0.25,5
+PFBS_Background,Serum,0.12,0.12,,1
+PFBS,Serum,19.3,11.3,19.7,28
+PFHxA_Background,Urine,11.8,11.8,5.24,2
+PFHxA,Urine,50,46.6,24.8,16
+PFBS_Background,Urine,28.4,28.4,,1
+PFBS,Urine,3550,1570,4190,36
