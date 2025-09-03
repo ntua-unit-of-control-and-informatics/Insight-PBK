@@ -5,48 +5,54 @@ using Statistics
 """
     preprocess_zhou_2014_data()
 
-Preprocess Zhou et al. (2014) PFBS data by extracting mean and standard deviation
-for serum and urine measurements.
+Preprocess Zhou et al. (2014) PFBS concentration data by age group.
+Converts 25th and 75th percentiles (P25, P75) to standard deviation.
 
-Data already contains mean and SD, so no statistical conversion is needed.
-Background levels are considered negligible and ignored.
+Focuses on Age_group 3 data only.
+P25 and P75 represent 25th and 75th percentiles respectively.
 
-Treats data as steady-state measurements after 10 years of exposure.
+Converts percentiles to SD using: SD = (P75 - P25) / 1.349
+(where 1.349 is the interquartile range factor for normal distribution)
+
+Treats data as steady-state serum measurements.
 
 Output:
-- zhou_2014_serum_summary.csv: Serum concentration with mean ± SD
-- zhou_2014_urine_summary.csv: Urine concentration with mean ± SD
+- zhou_2014_serum_summary.csv: Serum concentration with mean ± SD for Age_group 3
+- zhou_2014_urine_summary.csv: Urine concentration with mean ± SD from original dataset
 """
 function preprocess_zhou_2014_data()
     
     println("Loading Zhou et al. (2014) PFBS data...")
     
-    # Load raw data
-    data = CSV.read("../../Data/Data_files/Zhou_2014.csv", DataFrame)
+    # Load serum data by age group (for Age_group 3)
+    serum_age_data = CSV.read("../../Data/Data_files/Zhou_2014_PFBS_concentration_by_group_of_years.csv", DataFrame)
     
-    println("Raw data dimensions: $(nrow(data)) rows × $(ncol(data)) columns")
+    # Load original data for urine measurements
+    original_data = CSV.read("../../Data/Data_files/Zhou_2014.csv", DataFrame)
     
-    # Filter for PFBS data only (excluding background)
-    pfbs_data = filter(row -> row.PFAS == "PFBS", data)
+    println("Serum age data dimensions: $(nrow(serum_age_data)) rows × $(ncol(serum_age_data)) columns")
+    println("Original data dimensions: $(nrow(original_data)) rows × $(ncol(original_data)) columns")
     
-    println("PFBS measurements found:")
-    for row in eachrow(pfbs_data)
-        println("  $(row.Media): Mean = $(row.Mean) ng/ml, SD = $(row.SD), N = $(row.N)")
+    # Filter for Age_group 3 from serum data
+    age_group_3 = filter(row -> row.Age_group == 3, serum_age_data)
+    
+    println("Age_group 3 data found:")
+    for row in eachrow(age_group_3)
+        println("  Age_group $(row.Age_group): Mean = $(row.Mean) ng/ml, 25th percentile = $(row.P25), 75th percentile = $(row.P75), N = $(row.N)")
     end
     
     # Study parameters
-    time_years = 10
-    time_days = time_years * 365.25
+    time_years = 6
+    time_days = time_years * 365
     
     println("\nStudy parameters:")
     println("  Exposure duration: $time_years years (steady-state)")
     println("  Time point: $(round(Int, time_days)) days")
-    println("  Data format: Mean and SD already provided")
+    println("  Data format: Mean with 25th and 75th percentiles")
+    println("  25th-75th percentile to SD conversion: SD = (P75 - P25) / 1.349")
     
-    # Process serum data
+    # Process serum data (Age_group 3 represents serum measurements)
     println("\nProcessing serum data...")
-    serum_data = filter(row -> row.Media == "Serum", pfbs_data)
-    
     serum_summary = DataFrame(
         time_days = Float64[],
         n_subjects = Int64[],
@@ -54,23 +60,29 @@ function preprocess_zhou_2014_data()
         sd_ng_ml = Float64[]
     )
     
-    if nrow(serum_data) > 0
-        serum_row = serum_data[1, :]
-        mean_val = serum_row.Mean
-        sd_val = serum_row.SD
-        n_subjects = serum_row.N
+    if nrow(age_group_3) > 0
+        data_row = age_group_3[1, :]
+        mean_val = data_row.Mean
+        p25 = data_row.P25  # 25th percentile
+        p75 = data_row.P75  # 75th percentile
+        n_subjects = data_row.N
+        
+        # Convert 25th-75th percentile to SD: SD = (P75 - P25) / 1.349
+        sd_val = (p75 - p25) / 1.349
         
         push!(serum_summary, (time_days, n_subjects, mean_val, sd_val))
         
         println("  Time: $time_years years ($(round(Int, time_days)) days)")
         println("  Mean: $(round(mean_val, digits=1)) ng/ml")
-        println("  SD: $(round(sd_val, digits=1)) ng/ml")
+        println("  25th percentile: $(round(p25, digits=1)) ng/ml")
+        println("  75th percentile: $(round(p75, digits=1)) ng/ml")
+        println("  → SD: $(round(sd_val, digits=1)) ng/ml")
         println("  n = $n_subjects subjects")
     end
     
-    # Process urine data
-    println("\nProcessing urine data...")
-    urine_data = filter(row -> row.Media == "Urine", pfbs_data)
+    # Process urine data from original Zhou_2014.csv
+    println("\nProcessing urine data from original dataset...")
+    pfbs_urine = filter(row -> row.PFAS == "PFBS" && row.Media == "Urine", original_data)
     
     urine_summary = DataFrame(
         time_days = Float64[],
@@ -79,8 +91,8 @@ function preprocess_zhou_2014_data()
         sd_ng_ml = Float64[]
     )
     
-    if nrow(urine_data) > 0
-        urine_row = urine_data[1, :]
+    if nrow(pfbs_urine) > 0
+        urine_row = pfbs_urine[1, :]
         mean_val = urine_row.Mean
         sd_val = urine_row.SD
         n_subjects = urine_row.N
@@ -104,7 +116,7 @@ function preprocess_zhou_2014_data()
     
     # Display summary statistics
     println("\n" * "="^60)
-    println("ZHOU ET AL. (2014) PFBS DATA SUMMARY")
+    println("ZHOU ET AL. (2014) PFBS AGE_GROUP 3 SUMMARY")
     println("="^60)
     
     if nrow(serum_summary) > 0
