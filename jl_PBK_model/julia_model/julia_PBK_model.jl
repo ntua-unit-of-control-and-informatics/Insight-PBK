@@ -58,8 +58,8 @@ function create_params(user_input)
     Vbal = (1*BW)-(VL+VF+VK+VFil+VG+VPlas+VR+VLu+VB) 
 
     kinetic_parameters = Dict(
-      "PFBS" => (Liver=128.8, Brain=201.6, Lung=56.11, Kidney=6.27, Tm=6.1, Kt=5, Free=0.001),
-      "PFHxA" => (Liver=0.001, Brain=43.68, Lung=31.92, Kidney=11.57, Tm=245.6, Kt=0.6, Free=0.01)
+      "PFBS" => (Liver=128.8, Brain=201.6, Lung=56.11, Kidney=6.27, Tm=6.1, Kt=5, Free=0.0365),
+      "PFHxA" => (Liver=0.001, Brain=43.68, Lung=31.92, Kidney=11.57, Tm=245.6, Kt=0.6, Free=0.038)
     )
     keep_params = kinetic_parameters[substance]
 
@@ -86,7 +86,8 @@ function create_params(user_input)
             VFil=VFil, VG=VG, VLu=VLu, VB=VB, VR=VR,
             PL=PL, PF=PF, PB=PB, PLu=PLu, PK=PK, 
             PG=PG, PR=PR,
-            Tm=Tm, Kt=Kt, Free=Free, kurine=kurine,
+            # Tm=Tm, 
+            Kt=Kt, Free=Free, kurine=kurine,
             ingestion=ingestion, ingestion_time=ingestion_time,
             admin_dose=admin_dose, admin_time=admin_time,
             admin_type=admin_type, exp_type=exp_type,
@@ -95,7 +96,7 @@ end
 
 function create_inits(parameters)
     # APlas, AG, AL, AF, ALu, AB, AK, AFil, AStore, AUrine, AR, ingestion
-    return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    return [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 end
 
 function create_events(parameters)
@@ -236,7 +237,7 @@ end
 
 # Input Parameters
 Bw = 70 # Body weight in kg
-substance = "PFHxA"
+substance = "PFBS"
 f_unabs = 0.5
 admin_dose = 0 # administered dose in ug
 admin_time = 0 # time when doses are administered, in hours
@@ -259,9 +260,10 @@ inits = create_inits(params)
 
 # Create events and set up the ODE problem
 events = create_events(params)
-tspan = (0.0, 10.0) # 10 days
+tspan = (0.0, 2190.0) # 10 days
 prob = ODEProblem(ode_func, inits, tspan, params, callback=events)
-solution = solve(prob, Tsit5(), saveat=0.2, reltol=1e-5, abstol=1e-5)
+saveat_times = collect(range(0.0, 2190.0, length=100))
+solution = solve(prob, Tsit5(), saveat=saveat_times, reltol=1e-5, abstol=1e-5)
 sol_dict = extract_concentrations(solution, params)
 
 # Convert the solution dictionary to a DataFrame with time points

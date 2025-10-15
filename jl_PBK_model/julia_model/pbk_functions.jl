@@ -1,11 +1,19 @@
 using DifferentialEquations
-using UnPack
+# using UnPack
 using DataFrames
 using CSV
 
 # Define the create.params function.
 function create_params(user_input)
-    @unpack BW, substance, admin_dose, admin_time, f_unabs, ingestion, ingestion_time, admin_type, exp_type = user_input
+    BW = user_input.BW
+    substance = user_input.substance
+    admin_dose = user_input.admin_dose
+    admin_time = user_input.admin_time
+    f_unabs = user_input.f_unabs
+    ingestion = user_input.ingestion
+    ingestion_time = user_input.ingestion_time
+    admin_type = user_input.admin_type
+    exp_type = user_input.exp_type
 
     QCC = 12.5		  # Cardiac blood output (L/h/kg^0.75)
     QFC = 0.052		  # Fraction cardiac output going to fat
@@ -58,12 +66,12 @@ function create_params(user_input)
     Vbal = (1*BW)-(VL+VF+VK+VFil+VG+VPlas+VR+VLu+VB) 
 
     kinetic_parameters = Dict(
-      "PFBS" => (Liver=128.8, Brain=201.6, Lung=56.11, Kidney=6.27, Tm=6.1, Kt=5, Free=0.001),
-      "PFHxA" => (Liver=0.001, Brain=43.68, Lung=31.92, Kidney=11.57, Tm=245.6, Kt=0.6, Free=0.01)
+      "PFBS" => (Liver=128.8, Brain=201.6, Lung=56.11, Kidney=6.27, Tm=6.1, Kt=5, Free=0.0365), # Original value Free=0.001
+      "PFHxA" => (Liver=0.001, Brain=43.68, Lung=31.92, Kidney=11.57, Tm=245.6, Kt=0.6, Free=0.038) # Original value Free=0.01
     )
     keep_params = kinetic_parameters[substance]
 
-    Tm = keep_params.Tm #ug/h Fabrega (2015) Table 2
+    Tm = keep_params.Tm*24 #ug/h Fabrega (2015) Table 2
     Kt = keep_params.Kt #ug/L Fabrega (2015) Table 2
     Free = keep_params.Free #unitless Fabrega (2015) Table 2
     PL = keep_params.Liver
@@ -86,7 +94,8 @@ function create_params(user_input)
             VFil=VFil, VG=VG, VLu=VLu, VB=VB, VR=VR,
             PL=PL, PF=PF, PB=PB, PLu=PLu, PK=PK, 
             PG=PG, PR=PR,
-            Tm=Tm, Kt=Kt, Free=Free, kurine=kurine,
+            # Tm=Tm, 
+            Kt=Kt, Free=Free, kurine=kurine,
             ingestion=ingestion, ingestion_time=ingestion_time,
             admin_dose=admin_dose, admin_time=admin_time,
             admin_type=admin_type, exp_type=exp_type,
@@ -99,7 +108,13 @@ function create_inits(parameters)
 end
 
 function create_events(parameters)
-    @unpack admin_dose, admin_time, admin_type, exp_type, ingestion, ingestion_time, Free = parameters
+    admin_dose = parameters.admin_dose
+    admin_time = parameters.admin_time
+    admin_type = parameters.admin_type
+    exp_type = parameters.exp_type
+    ingestion = parameters.ingestion
+    ingestion_time = parameters.ingestion_time
+    Free = parameters.Free
     
     events = []
     
@@ -146,10 +161,42 @@ function create_events(parameters)
 end
 
 function ode_func(du, u, p, t)
-    @unpack QC, QCP, QL, QF, QK, QFil, QG, QLu, QB, QR,
-            VPlas, VL, VF, VK, VFil, VG, VLu, VB, VR,
-            PL, PF, PB, PLu, PK, PG, PR,
-            Tm, Kt, Free, kurine = p
+    # @unpack QC, QCP, QL, QF, QK, QFil, QG, QLu, QB, QR,
+    #         VPlas, VL, VF, VK, VFil, VG, VLu, VB, VR,
+    #         PL, PF, PB, PLu, PK, PG, PR,
+    #         Tm, Kt, Free, kurine = p
+    
+    # Extract parameters explicitly from p tuple
+    QC = p.QC
+    QCP = p.QCP
+    QL = p.QL
+    QF = p.QF
+    QK = p.QK
+    QFil = p.QFil
+    QG = p.QG
+    QLu = p.QLu
+    QB = p.QB
+    QR = p.QR
+    VPlas = p.VPlas
+    VL = p.VL
+    VF = p.VF
+    VK = p.VK
+    VFil = p.VFil
+    VG = p.VG
+    VLu = p.VLu
+    VB = p.VB
+    VR = p.VR
+    PL = p.PL
+    PF = p.PF
+    PB = p.PB
+    PLu = p.PLu
+    PK = p.PK
+    PG = p.PG
+    PR = p.PR
+    Tm = p.Tm
+    Kt = p.Kt
+    Free = p.Free
+    kurine = p.kurine
     
     # Amount of PFAS in each compartment (ug)
     APlas = u[1] # Plasma mass (ug)
@@ -204,10 +251,10 @@ function ode_func(du, u, p, t)
     du[8] = QFil*(Free*CPlas - CFil) - (Tm*CFil)/(Kt+CFil)
 
     # Storage compartment for Urine
-    du[9] = QFil*CFil - kurine*AStore
+    du[9] = 0 #QFil*CFil - kurine*AStore
 
     # Urine compartment
-    du[10] = kurine*AStore
+    du[10] = QFil*CFil # kurine*AStore
 
     # Rest of body compartment
     du[11] = QR*Free*(CPlas - CR/PR)
@@ -215,11 +262,30 @@ function ode_func(du, u, p, t)
     # Ingestion compartment
     du[12] = 0 # Ingestion is not modeled as a differential equation,
     # but rather as a source term in the gut compartment
+    
+    # Calculate instantaneous urine concentration
+    # Excretion rate (μg/day) / Urine flow rate (L/day) = μg/L = ng/mL
+    urine_flow_rate = 1.26  # L/day
+    instantaneous_excretion_rate = kurine * AStore  # μg/day (same as du[10])
+    urine_concentration_instant = instantaneous_excretion_rate / urine_flow_rate  # ng/mL
+    
+    # Store this as additional output (can be accessed via callback)
+    # This will be available in the solution for post-processing
 end
 
 # Post-process to get Concentrations
 function extract_concentrations(sol, parameters)
-    @unpack VPlas, VG, VL, VF, VLu, VB, VK, VFil, VR, Free = parameters
+    VPlas = parameters.VPlas
+    VG = parameters.VG
+    VL = parameters.VL
+    VF = parameters.VF
+    VLu = parameters.VLu
+    VB = parameters.VB
+    VK = parameters.VK
+    VFil = parameters.VFil
+    VR = parameters.VR
+    Free = parameters.Free
+    kurine = parameters.kurine
     concentrations = Dict(
         "CPlas" => [u[1] for u in sol.u] ./ VPlas ./ Free,
         "CG" => [u[2] for u in sol.u] ./ VG,
@@ -231,5 +297,19 @@ function extract_concentrations(sol, parameters)
         "CFil" => [u[8] for u in sol.u] ./ VFil,
         "CR" => [u[11] for u in sol.u] ./ VR
     )
+    
+    # Calculate instantaneous urine concentration using physiological approach
+    urine_flow_rate = 1.26  # L/day
+    urine_concentrations = []
+    
+    for u in sol.u
+        AFiltrate = u[8]  # Storage compartment mass (μg)
+        # instantaneous_excretion_rate = kurine * AStore  # μg/day
+        instantaneous_excretion_rate = AFiltrate / 0.028 * 250  # μg/day
+        urine_conc = instantaneous_excretion_rate / urine_flow_rate  # ng/mL
+        push!(urine_concentrations, urine_conc)
+    end
+    
+    concentrations["CUrine"] = urine_concentrations
     return concentrations
 end

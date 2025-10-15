@@ -198,11 +198,11 @@ function lognormal_params(μ, cv)
     return μ_log, σ_log
 end
 
-μ_log_Tm, σ_log_Tm = lognormal_params(15000.0, 0.5)  # CV = 50%
-Kt_fixed = 5.0  # Fixed Kt value
+# μ_log_Tm, σ_log_Tm = lognormal_params(7000.0, 1.0)  # CV = 100%
+Kt_fixed = 15000.0  # Fixed Kt value
 
 println("\nPrior parameters:")
-println("  Tm: LogNormal($(round(μ_log_Tm, digits=3)), $(round(σ_log_Tm, digits=3)))")
+# println("  Tm: LogNormal($(round(μ_log_Tm, digits=3)), $(round(σ_log_Tm, digits=3)))")
 println("  Kt: Fixed at $(Kt_fixed) μg/L")
 println("  Partition coefficients: Fixed at EDM calculated values")
 
@@ -221,29 +221,59 @@ for study in study_data
     println("    Exposure: $(round(study.exposure, digits=1)) ng/kg-bw/day")
 end
 
+# Create 3D log-transformed data array
+# Dimensions: [observation_index, study_index, compartment_type]
+# study_index: 1=Zhou, 2=Olsen, 3=He
+# compartment_type: 1=serum, 2=urine
+println("\nCreating 3D log-transformed data array...")
+max_obs_serum = maximum([nrow(zhou_serum), nrow(olsen_serum), nrow(he_serum)])
+max_obs_urine = maximum([nrow(zhou_urine), nrow(olsen_urine), nrow(he_urine)])
+max_obs = max(max_obs_serum, max_obs_urine)
+
+log_data = fill(NaN, max_obs, 3, 2)  # (max_obs, 3 studies, 2 compartments)
+
+# Fill with log-transformed observations
+log_data[1:nrow(zhou_serum), 1, 1] = log.(zhou_serum.mean_ng_ml)
+log_data[1:nrow(zhou_urine), 1, 2] = log.(zhou_urine.mean_ng_ml)
+log_data[1:nrow(olsen_serum), 2, 1] = log.(olsen_serum.mean_ng_ml)
+log_data[1:nrow(olsen_urine), 2, 2] = log.(olsen_urine.mean_ng_ml)
+log_data[1:nrow(he_serum), 3, 1] = log.(he_serum.mean_ng_ml)
+log_data[1:nrow(he_urine), 3, 2] = log.(he_urine.mean_ng_ml)
+
+println("  Log-data array shape: $(size(log_data))")
+println("  Zhou serum obs: $(nrow(zhou_serum)), urine obs: $(nrow(zhou_urine))")
+println("  Olsen serum obs: $(nrow(olsen_serum)), urine obs: $(nrow(olsen_urine))")
+println("  He serum obs: $(nrow(he_serum)), urine obs: $(nrow(he_urine))")
+
 # MCMC Model Definition
-@model function pbk_calibration(study_data, Kt_fixed)
+@model function pbk_calibration(study_data, log_data, Kt_fixed)
 
     # Priors for parameters
-    Tm ~ LogNormal(μ_log_Tm, σ_log_Tm)  # Maximum reabsorption rate (μg/day)
+    μ_Tm ~ truncated(Normal(15000.0, 7500.0), 0, Inf)  # Hyperprior for log-mean of Tm
+    σ_Tm ~ truncated(Normal(7500.0, 2500.0), 0, Inf)  # Hyperprior for log-sd of Tm
+    μ_log_Tm, σ_log_Tm = lognormal_params(μ_Tm, σ_Tm/μ_Tm)
+    Tm_zhou ~ LogNormal(μ_log_Tm, σ_log_Tm)  # Maximum reabsorption rate (μg/day)
+    Tm_olsen ~ LogNormal(μ_log_Tm, σ_log_Tm)  # Maximum reabsorption rate (μg/day)
+    Tm_he ~ LogNormal(μ_log_Tm, σ_log_Tm)  # Maximum reabsorption rate (μg/day)
     Kt = Kt_fixed  # Fixed Michaelis constant (μg/L)
 
     # Proportional error parameter
     sigma_serum ~ truncated(Normal(0.0, 0.5), 0, Inf)  #  error for serum
     sigma_urine ~ truncated(Normal(0.0, 0.5), 0, Inf)  #  error for urine
-    # sigma ~ truncated(Normal(0.0, 0.5), 0, Inf)  #  error for urine
-    # sigma = 0.2
-
-    # Initialize total log-likelihood accumulator
-    # total_loglik = 0.0
 
     # Loop through each study
-    for study in study_data
+    for (study_idx, study) in enumerate(study_data)
         # Extract measurement times and convert to arrays
         serum_times = study.serum.time_days
         urine_times = study.urine.time_days
         all_times = sort(unique(vcat(serum_times, urine_times)))
-        
+        if study.name == "Zhou"
+            Tm = Tm_zhou
+        elseif study.name == "Olsen"
+            Tm = Tm_olsen
+        elseif study.name == "He"
+            Tm = Tm_he
+        end
         # Run PBK model for this study
         try
             concentrations, sim_times = run_pbk_study(Tm, Kt, study.exposure, study.exp_time, all_times, study.name)
@@ -266,46 +296,14 @@ end
             # Extract all predictions at once
             serum_pred_vals = concentrations["CPlas"][serum_indices]
             urine_pred_vals = concentrations["CUrine"][urine_indices]
-            
-            # Study-specific likelihood with unique variable names
-            if study.name == "Zhou"
-                obs_serum_Zhou = study.serum.mean_ng_ml
-                obs_urine_Zhou = study.urine.mean_ng_ml
-                # Compute log-likelihood manually
-                # ll_serum = sum(logpdf.(LogNormal.(log.(serum_pred_vals), sigma), obs_serum_Zhou))
-                # ll_urine = sum(logpdf.(LogNormal.(log.(urine_pred_vals), sigma), obs_urine_Zhou))
-                # total_loglik += ll_serum + ll_urine
-                # Add to Turing's likelihood
-                log_obs_serum_Zhou = log.(obs_serum_Zhou)
-                log_obs_urine_Zhou = log.(obs_urine_Zhou)
-                # Add to Turing's likelihood
-                log_obs_serum_Zhou ~ arraydist(Normal.(log.(serum_pred_vals), sigma_serum))
-                log_obs_urine_Zhou ~ arraydist(Normal.(log.(urine_pred_vals), sigma_urine))
-            elseif study.name == "Olsen"
-                obs_serum_Olsen = study.serum.mean_ng_ml
-                obs_urine_Olsen = study.urine.mean_ng_ml
-                # Compute log-likelihood manually
-                # ll_serum = sum(logpdf.(LogNormal.(log.(serum_pred_vals), sigma), obs_serum_Olsen))
-                # ll_urine = sum(logpdf.(LogNormal.(log.(urine_pred_vals), sigma), obs_urine_Olsen))
-                # total_loglik += ll_serum + ll_urine
-                log_obs_serum_Olsen = log.(obs_serum_Olsen)
-                log_obs_urine_Olsen = log.(obs_urine_Olsen)
-                # Add to Turing's likelihood
-                log_obs_serum_Olsen ~ arraydist(Normal.(log.(serum_pred_vals), sigma_serum))
-                log_obs_urine_Olsen ~ arraydist(Normal.(log.(urine_pred_vals), sigma_urine))
-            elseif study.name == "He"
-                obs_serum_He = study.serum.mean_ng_ml
-                obs_urine_He = study.urine.mean_ng_ml
-                # Compute log-likelihood manually
-                # ll_serum = sum(logpdf.(LogNormal.(log.(serum_pred_vals), sigma), obs_serum_He))
-                # ll_urine = sum(logpdf.(LogNormal.(log.(urine_pred_vals), sigma), obs_urine_He))
-                # total_loglik += ll_serum + ll_urine
-                log_obs_serum_He = log.(obs_serum_He)
-                log_obs_urine_He = log.(obs_urine_He)
-                # Add to Turing's likelihood
-                log_obs_serum_He ~ arraydist(Normal.(log.(serum_pred_vals), sigma_serum))
-                log_obs_urine_He ~ arraydist(Normal.(log.(urine_pred_vals), sigma_urine))
-            end
+
+            # Get number of observations for this study
+            n_serum = length(serum_pred_vals)
+            n_urine = length(urine_pred_vals)
+
+            # Use log_data from function argument - Turing recognizes it as observed
+            log_data[1:n_serum, study_idx, 1] ~ arraydist(Normal.(log.(serum_pred_vals), sigma_serum))
+            log_data[1:n_urine, study_idx, 2] ~ arraydist(Normal.(log.(urine_pred_vals), sigma_urine))
             
         catch e
             println("Error in ODE solving for $(study.name): $e")
@@ -313,9 +311,6 @@ end
             Turing.@addlogprob! -1000
         end
     end
-
-    # Print total log-likelihood for this iteration
-    # println("Iteration: Tm = $(Tm), Total log-likelihood = $(total_loglik)")
 end
 
 println("\n" * "="^80)
@@ -324,8 +319,8 @@ println("="^80)
 
 # MCMC Settings
 n_chains = 4
-n_iterations = 1000
-n_burnin = 500
+n_iterations = 2000
+n_burnin = 1000
 
 println("MCMC settings:")
 println("  Chains: $n_chains")
@@ -334,7 +329,7 @@ println("  Burn-in: $n_burnin")
 
 # Sample from the model
 println("\nStarting parallel MCMC sampling...")
-chains = sample(pbk_calibration(study_data, Kt_fixed), NUTS(), MCMCThreads(), n_iterations, n_chains)
+chains = sample(pbk_calibration(study_data, log_data, Kt_fixed), NUTS(), MCMCThreads(), n_iterations, n_chains)
 
 
 println("\nMCMC sampling completed!")
