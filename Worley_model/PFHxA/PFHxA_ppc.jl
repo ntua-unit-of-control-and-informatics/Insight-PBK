@@ -30,7 +30,7 @@ chains = deserialize("Worley_model/PFHxA/Worley_PFHxA_calibration_chains.jls")
 
 # Load intake estimation data
 println("Loading experimental data...")
-intake_data = CSV.read("Worley_model/PFHxA/Data/test_intake_estimation_results.csv", DataFrame)
+intake_data = CSV.read("Worley_model/PFHxA/Data/intake_estimation_results.csv", DataFrame)
 
 # Load partition coefficients
 partition_data = CSV.read("Worley_model/Worley_partition_coefficients_results.csv", DataFrame)

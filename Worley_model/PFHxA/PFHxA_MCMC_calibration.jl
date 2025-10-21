@@ -35,7 +35,7 @@ println("="^80)
 
 # Load intake estimation data
 println("\nLoading intake estimation data...")
-intake_data = CSV.read("Worley_model/PFHxA/Data/test_intake_estimation_results.csv", DataFrame)
+intake_data = CSV.read("Worley_model/PFHxA/Data/intake_estimation_results.csv", DataFrame)
 
 # Load partition coefficients
 println("\nLoading partition coefficients...")
