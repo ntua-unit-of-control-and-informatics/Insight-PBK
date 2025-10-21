@@ -3,22 +3,44 @@ using DataFrames
 using Statistics
 
 """
-    calculate_rest_of_body_composition(tissue_data, tissue_mass_data)
+    calculate_rest_of_body_composition(tissue_data, tissue_mass_data, requested_tissues)
 
 Calculate mass-weighted average composition for rest of body compartment.
-Includes Heart, Gonads, Skin, Spleen, and Muscle based on PBK model structure.
+Automatically includes all available tissues except those explicitly requested by the user.
 
 # Arguments
 - `tissue_data`: DataFrame with tissue composition data
 - `tissue_mass_data`: DataFrame with tissue mass fractions
+- `requested_tissues`: Vector of tissue names that user wants as separate compartments
 
 # Returns
 - Named tuple with rest of body composition (sl, ml, alb, sp, w, fabp)
 """
-function calculate_rest_of_body_composition(tissue_data, tissue_mass_data)
-    
-    # Define tissues that comprise "rest of body" (not distinct compartments in PBK model)
-    rest_body_tissues = ["Heart", "Gonads", "Skin", "Spleen", "Muscle"]
+function calculate_rest_of_body_composition(tissue_data, tissue_mass_data, requested_tissues=[])
+
+    # Get all available tissues from the mass fractions data
+    all_available_tissues = unique(tissue_mass_data.Compartment)
+
+    # Normalize requested tissue names to match data (capitalize first letter)
+    requested_tissues_normalized = [map_tissue_name(t) for t in requested_tissues if lowercase(t) != "rest of body"]
+
+    # Exclude tissues that should never be in rest of body:
+    # - Blood (reference compartment)
+    # - Plasma (part of blood compartment)
+    # - Rest_of_Body (avoid circular definition)
+    # - Total_Body (this is a sum, not a tissue)
+    # - User-requested tissues (they get their own compartments)
+    exclude_tissues = vcat(requested_tissues_normalized, ["Blood", "Plasma", "Rest_of_Body", "Total_Body"])
+
+    # Determine which tissues go into "rest of body"
+    rest_body_tissues = [t for t in all_available_tissues if !(t in exclude_tissues)]
+
+    println("\n" * "="^60)
+    println("Determining rest of body composition:")
+    println("  Available tissues: ", join(all_available_tissues, ", "))
+    println("  Requested as separate compartments: ", join(requested_tissues_normalized, ", "))
+    println("  Automatically assigned to rest of body: ", join(rest_body_tissues, ", "))
+    println("="^60)
     
     # Get mass fractions for rest of body tissues
     rest_mass_fractions = Dict{String, Float64}()
@@ -90,27 +112,39 @@ end
 
 Calculate tissue:blood partition coefficients for PFAS compounds using the Allendorf equilibrium distribution model.
 
+The "rest of body" compartment is automatically calculated as a mass-weighted average of all tissues
+NOT explicitly listed in the tissues vector (excluding Blood which is the reference compartment).
+
 # Arguments
 - `tissue_composition_file`: Path to CSV file with tissue composition data
 - `distribution_coeffs_file`: Path to CSV file with distribution coefficients (log scale)
 - `tissue_mass_file`: Path to CSV file with tissue mass fractions for rest of body calculation
 - `compounds`: Vector of compound names to calculate (e.g., ["PFBS", "PFHxS"])
-- `tissues`: Vector of tissue names to calculate (e.g., ["liver", "adipose", "kidney"])
+- `tissues`: Vector of tissue names to calculate (e.g., ["liver", "kidney", "rest of body"])
+  - Include "rest of body" to get the partition coefficient for all remaining tissues
+  - All tissues NOT in this list will automatically be lumped into "rest of body"
 
 # Returns
 - Dictionary with partition coefficients for each tissue-compound pair
 
-# Example
+# Examples
 ```julia
+# Example 1: Only liver and kidney as separate compartments
 compounds = ["PFBS", "PFHxS"]
-tissues = ["liver", "adipose", "kidney", "gut", "lung", "brain", "rest of body"]
+tissues = ["liver", "kidney", "rest of body"]
 results = calculate_partition_coefficients(
-    "volume_fractions.csv", 
+    "volume_fractions.csv",
     "distribution_coefficients.csv",
     "tissue_fractions_allendorf_s1.8.1.csv",
-    compounds, 
+    compounds,
     tissues
 )
+# Result: liver PC, kidney PC, and rest of body PC (includes adipose, gut, lung, brain, etc.)
+
+# Example 2: Multiple tissues as separate compartments
+tissues = ["liver", "adipose", "kidney", "gut", "lung", "brain", "rest of body"]
+results = calculate_partition_coefficients(...)
+# Result: PCs for each listed tissue, and rest of body PC (includes heart, gonads, skin, etc.)
 ```
 """
 function calculate_partition_coefficients(tissue_composition_file, distribution_coeffs_file, tissue_mass_file, compounds, tissues)
@@ -180,7 +214,7 @@ function calculate_partition_coefficients(tissue_composition_file, distribution_
             # Handle rest of body calculation
             if tissue_name == "Rest_of_Body"
                 println("\nCalculating rest of body composition for $compound...")
-                tissue_comp = calculate_rest_of_body_composition(tissue_data, tissue_mass_data)
+                tissue_comp = calculate_rest_of_body_composition(tissue_data, tissue_mass_data, tissues)
             else
                 # Get tissue composition from standard data
                 tissue_row = filter(row -> lowercase(row.Tissue) == lowercase(tissue_name), tissue_data)
@@ -339,9 +373,10 @@ end
 # Example usage
 if abspath(PROGRAM_FILE) == @__FILE__
     # Define target compounds and tissues
-    compounds = ["PFBS", "PFHxS"]
-    tissues = ["liver", "adipose", "kidney", "gut", "lung", "brain", "rest of body"]
-    
+    compounds = ["PFBS", "PFHxA"]
+    # tissues = ["liver", "adipose", "kidney", "gut", "lung", "brain", "rest of body"]
+    tissues = ["liver", "kidney", "rest of body"]
+
     # Calculate partition coefficients
     results = calculate_partition_coefficients(
         "volume_fractions.csv",
@@ -390,7 +425,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     
     if !isempty(export_data)
         df_results = DataFrame(export_data)
-        CSV.write("partition_coefficients_results.csv", df_results)
+        CSV.write("../Worley_model/Worley_partition_coefficients_results.csv", df_results)
         println("Results saved successfully!")
     end
 end
