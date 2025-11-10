@@ -38,7 +38,7 @@ println("="^80)
 
 # Load partition coefficients
 println("\nLoading partition coefficients...")
-partition_data = CSV.read("Population_model/partition_coefficients_results.csv", DataFrame)
+partition_data = CSV.read("PFAS_models/partition_coefficients_results.csv", DataFrame)
 pfbs_partitions = filter(row -> row.Compound == "PFBS", partition_data)
 PL = pfbs_partitions[pfbs_partitions.Tissue .== "liver", :Partition_Coefficient][1]
 PK = pfbs_partitions[pfbs_partitions.Tissue .== "kidney", :Partition_Coefficient][1]
@@ -56,7 +56,7 @@ subject_data = []
 
 for i in 1:n_subjects
     # Read CSV file
-    data = CSV.read("Population_model/PFBS/digitized_data/subject_$i.csv", DataFrame)
+    data = CSV.read("PFAS_models/PFBS/digitized_data/subject_$i.csv", DataFrame)
 
     # Round time to remove decimals
     data.Time_days = round.(data.Time_days)
@@ -330,7 +330,7 @@ println("\nMCMC sampling completed!")
 # Save results
 println("\nSaving MCMC results...")
 using Serialization
-serialize("Population_model/PFBS/PFBS_population_chains.jls", chains)
+serialize("PFAS_models/PFBS/PFBS_population_chains.jls", chains)
 
 # Generate diagnostics
 println("\n" * "="^80)
@@ -387,13 +387,13 @@ println("GENERATING DIAGNOSTIC PLOTS")
 println("="^80)
 
 chains_plot = plot(chains, size=(2000, 2500), dpi=300)
-savefig(chains_plot, "Population_model/PFBS/PFBS_population_diagnostic_plots.png")
-println("  Saved to: Population_model/PFBS/PFBS_population_diagnostic_plots.png")
+savefig(chains_plot, "PFAS_models/PFBS/PFBS_population_diagnostic_plots.png")
+println("  Saved to: PFAS_models/PFBS/PFBS_population_diagnostic_plots.png")
 
 println("\n" * "="^80)
 println("POPULATION CALIBRATION COMPLETE")
 println("="^80)
 println("Results saved to:")
-println("  - Population_model/PFBS/PFBS_population_chains.jls (MCMC chains)")
-println("  - Population_model/PFBS/PFBS_population_diagnostic_plots.png (diagnostic plots)")
+println("  - PFAS_models/PFBS/PFBS_population_chains.jls (MCMC chains)")
+println("  - PFAS_models/PFBS/PFBS_population_diagnostic_plots.png (diagnostic plots)")
 println("="^80)

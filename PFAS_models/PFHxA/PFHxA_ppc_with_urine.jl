@@ -18,7 +18,7 @@ println("POSTERIOR PREDICTIVE CHECK - SINGLE-DOSE PFHxA MODEL (PLASMA + URINE)")
 println("="^80)
 
 # Create output directory
-output_dir = "Population_model/PFHxA/PPC"
+output_dir = "PFAS_models/PFHxA/PPC"
 if !isdir(output_dir)
     mkpath(output_dir)
     println("\nCreated output directory: $output_dir")
@@ -26,11 +26,11 @@ end
 
 # Load MCMC chains
 println("\nLoading MCMC chains...")
-chains = deserialize("Population_model/PFHxA/PFHxA_with_urine_chains.jls")
+chains = deserialize("PFAS_models/PFHxA/PFHxA_with_urine_chains.jls")
 
 # Load partition coefficients
 println("Loading partition coefficients...")
-partition_data = CSV.read("Population_model/partition_coefficients_results.csv", DataFrame)
+partition_data = CSV.read("PFAS_models/partition_coefficients_results.csv", DataFrame)
 pfhxa_partitions = filter(row -> row.Compound == "PFHxA", partition_data)
 PL = pfhxa_partitions[pfhxa_partitions.Tissue .== "liver", :Partition_Coefficient][1]
 PK = pfhxa_partitions[pfhxa_partitions.Tissue .== "kidney", :Partition_Coefficient][1]
@@ -43,7 +43,7 @@ println("    Rest of body:blood (PR) = $(round(PR, digits=4))")
 
 # Load plasma data
 println("\nLoading plasma data...")
-plasma_data = CSV.read("Population_model/PFHxA/digitized_data/Abraham_2024_plasma_data.csv", DataFrame)
+plasma_data = CSV.read("PFAS_models/PFHxA/digitized_data/Abraham_2024_plasma_data.csv", DataFrame)
 rename!(plasma_data, Symbol("C_plasma_ug/L") => :C_plasma)
 plasma_data = dropmissing(plasma_data)
 
@@ -52,7 +52,7 @@ println("  Time range: $(minimum(plasma_data.Time_days)) - $(maximum(plasma_data
 
 # Load urine data
 println("\nLoading urine data...")
-urine_data = CSV.read("Population_model/PFHxA/digitized_data/Abraham_2024_urine_data_processed.csv", DataFrame)
+urine_data = CSV.read("PFAS_models/PFHxA/digitized_data/Abraham_2024_urine_data_processed.csv", DataFrame)
 urine_data = dropmissing(urine_data)
 
 println("  Urine data points: $(nrow(urine_data))")

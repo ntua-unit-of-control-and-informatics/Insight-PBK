@@ -1,10 +1,10 @@
 library(deSolve)
 
 #===============================================
-# PFHxA Population PBK Model (Deterministic)
+# PFBS Population PBK Model (Deterministic)
 #===============================================
 # This R implementation uses mean posterior estimates from the
-# PFHxA single-dose model with plasma and urine data.
+# hierarchical Bayesian PFBS population model.
 # Based on the Worley et al. PBK model structure.
 #===============================================
 
@@ -44,14 +44,14 @@ create.params <- function(user_input){
     VPTCC = 1.35e-4 #vol. of proximal tubule cells (L/g kidney) (60 million PTC cells/gram kidney, 1 PTC = 2250 um3)
 
     #Chemical Specific Parameters
-    MW = 314.05	#PFHxA molecular mass (g/mol)
+    MW = 300.10	#PFBS molecular mass (g/mol)
 
-    Free = 0.038 #free fraction in plasma
+    Free = 0.02 #free fraction in plasma
 
     #Kidney Transport Parameters
     # Basolateral transporter parameters (from Worley model - OAT1/OAT3)
     Vmax_baso_invitro = 439.2 #Vmax of basolateral transporter (pmol/mg protein/min)
-    Km_baso = 8952.96 #Km of basolateral transporter (ug/L) - PFHxA specific
+    Km_baso = 20100 #Km of basolateral transporter (ug/L)
 
     # Apical transporter parameters
     Vmax_apical_invitro = 37400 #Vmax of apical transporter (pmol/mg protein/min); base value from Worley model
@@ -59,21 +59,20 @@ create.params <- function(user_input){
     # ====================================================================
     # POSTERIOR MEAN ESTIMATES - TO BE FILLED IN BY USER
     # ====================================================================
-    Km_apical = 72750.0  # Mean Km_apical from MCMC (ug/L) - REPLACE WITH POSTERIOR MEAN
-    RAFbaso = 0.02883	# Mean RAFbaso from MCMC - REPLACE WITH POSTERIOR MEAN
-    RAFapi = 1.41e-6	# Mean RAFapi from MCMC - REPLACE WITH POSTERIOR MEAN
-    PC_scale = 0.1226  # PC scaling factor from MCMC - REPLACE WITH POSTERIOR MEAN
+    Km_apical = 109100.0  # Mean Km_apical from MCMC (ug/L) - REPLACE WITH POSTERIOR MEAN
+    RAFbaso = 1.0	# Fixed (for identifiability)
+    RAFapi = 7.141e-5	# Mean population RAFapi from MCMC - REPLACE WITH POSTERIOR MEAN
 
     protein = 2.0e-6	#amount of protein in proximal tubule cells (mg protein/proximal tubule cell)
     GFRC = 24.19*inv_time_scale	#glomerular filtration rate (L/time_scale/kg kidney)
 
     # ====================================================================
-    # PFHxA PARTITION COEFFICIENTS - TO BE FILLED IN BY USER
+    # PFBS PARTITION COEFFICIENTS - TO BE FILLED IN BY USER
     # ====================================================================
-    # Values from Population_model/partition_coefficients_results.csv
-    PL = 0.5279 #liver:blood partition coefficient - REPLACE WITH ACTUAL VALUE
-    PK = 0.5141 #kidney:blood partition coefficient - REPLACE WITH ACTUAL VALUE
-    PR = 0.3991 #rest of body:blood partition coefficient - REPLACE WITH ACTUAL VALUE (will be scaled by PC_scale)
+    # Values from PFAS_models/partition_coefficients_results.csv
+    PL = 0.4587 #liver:blood partition coefficient - REPLACE WITH ACTUAL VALUE
+    PK = 0.4539 #kidney:blood partition coefficient - REPLACE WITH ACTUAL VALUE
+    PR = 0.4104 #rest of body:blood partition coefficient - REPLACE WITH ACTUAL VALUE
 
     #Rate constants (from Worley model)
     kdif = 0.001*inv_time_scale	#diffusion rate from proximal tubule cells (L/time_scale)
@@ -111,7 +110,7 @@ create.params <- function(user_input){
     VR = (0.93*BW) - VPlas - VPTC - Vfil - VL	#volume of remaining tissue (L);
     VBal = (0.93*BW) - (VR + VL + VPTC + Vfil + VPlas)	#Balance check of tissue volumes; should equal zero
 
-    # Calculate Vmax with PFHxA molecular weight and estimated RAFapi
+    # Calculate Vmax with PFBS molecular weight and estimated RAFapi
     Vmax_basoC = (Vmax_baso_invitro*RAFbaso*PTC*protein*60*(MW/1e12)*1e6)*inv_time_scale #Vmax of basolateral transporters (ug/time_scale/kg BW)
     Vmax_apicalC = (Vmax_apical_invitro*RAFapi*PTC*protein*60*(MW/1e12)*1e6)*inv_time_scale #Vmax of apical transporters (ug/time_scale/kg BW)
     Vmax_baso = Vmax_basoC*BW^0.75	#(ug/time_scale)
@@ -130,9 +129,6 @@ create.params <- function(user_input){
 
     water_consumption <- 1.36 # L/time_scale
 
-    # Apply PC_scale to rest of body partition coefficient
-    PR_scaled = PR * PC_scale
-
     return(list( "Free" = Free, "QC" = QC, "QK" = QK, "QL" = QL, "QR" = QR,
                  "VPlas" = VPlas,
                  "VKb" = VKb, "Vfil" = Vfil, "VL" = VL, "VR" = VR, "ML" = ML,
@@ -140,7 +136,7 @@ create.params <- function(user_input){
                  'kdif' = kdif, "Km_baso" = Km_baso, "Km_apical" = Km_apical,
                  "kbile" = kbile, "kurine" = kurine, "kefflux" = kefflux,
                  "GFR" = GFR, "kabs" = kabs, "kunabs" = kunabs, "GE" = GE, "k0" = k0,
-                 "PL" = PL, "PK" = PK, "PR" = PR_scaled, "kvoid" = kvoid,
+                 "PL" = PL, "PK" = PK, "PR" = PR, "kvoid" = kvoid,
                  "ingestion" = ingestion, "ingestion_time" = ingestion_time,
                  "admin_dose" = admin_dose, "admin_time" = admin_time,
                  "exp_type" = exp_type
@@ -239,7 +235,7 @@ ode.func <- function(time, inits, params, custom.func){
     CLiver = AL/ML #	concentration in the liver (ug/g)
     CVL = CL/PL	#concentration in the venous blood leaving the liver (ug/L)
     CA_free = Aplas_free/VPlas		#concentration in plasma (ug/L)
-    CA = CA_free/Free	#concentration of total PFHxA in plasma (ug/L)
+    CA = CA_free/Free	#concentration of total PFBS in plasma (ug/L)
     Curine = Aurine/kvoid
 
     # Rest of Body (Tis)
@@ -280,7 +276,7 @@ ode.func <- function(time, inits, params, custom.func){
     #Liver
     dAL = QL*(CA-CVL)*Free - kbile*AL + kabs*ASI + k0*AST #rate of change in the liver (ug/time_scale)
     dAbile = kbile*AL
-    amount_per_gram_liver = CLiver	#amount of PFHxA in liver per gram liver (ug/g)
+    amount_per_gram_liver = CLiver	#amount of PFBS in liver per gram liver (ug/g)
 
     #Plasma compartment
     dAplas_free = (QR*CVR*Free) + (QK*CVK*Free) + (QL*CVL*Free) -
@@ -314,57 +310,54 @@ ode.func <- function(time, inits, params, custom.func){
 #======================================
 # Uncomment to test:
 
-# user_input <- list(
-#   'BW' = 82,
-#   "ingestion" = c(1, 0),  # 1 ug/day for period, then 0 (elimination)
-#   "ingestion_time" = c(0, 1),  # Exposure for 1 year, then elimination
-#   "admin_dose" = 0,
-#   "admin_time" = 0,
-#   "exp_type" = "continuous",  # "continuous" or "bolus"
-#   "time_scale" = "years"
-# )
-
-# For bolus dosing example:
 user_input <- list(
-  'BW' = 82,
-  "ingestion" = 0,
-  "ingestion_time" = 0,
-  "admin_dose" = c(3.99),  # 3.99 ug bolus dose (Abraham 2024 study)
-  "admin_time" = c(0),    # at time 0
-  "exp_type" = "bolus",
-  "time_scale" = "days"
+  'BW' = 70,
+  "ingestion" = c(10, 0),  # 10 ug/day for period, then 0 (elimination)
+  "ingestion_time" = c(0, 5),  # Exposure for 5 years, then elimination
+  "admin_dose" = 0,
+  "admin_time" = 0,
+  "exp_type" = "continuous",  # "continuous" or "bolus"
+  "time_scale" = "years"
 )
 
-params <- create.params(user_input)
-inits <- create.inits(params)
-events <- create.events(params)
+# For bolus dosing example:
+# user_input <- list(
+#   'BW' = 70,
+#   "ingestion" = 0,
+#   "ingestion_time" = 0,
+#   "admin_dose" = c(100,50),  # 100 ug bolus dose
+#   "admin_time" = c(0, 5),    # at time 0
+#   "exp_type" = "bolus",
+#   "time_scale" = "days"
+# )
 
-times <- seq(0, 15, 0.1)
-out <- ode(y = inits, times = times, func = ode.func, parms = params,
-           events = events, method = "lsodes", atol = 1e-8, rtol = 1e-8)
+# params <- create.params(user_input)
+# inits <- create.inits(params)
+# events <- create.events(params)
 
-plot(out[,"time"], out[,"CA"], type = 'l', log = 'y',
-     xlab = 'Time (years)', ylab = 'Serum Concentration (ug/L)',
-     main = 'PFHxA Population Model - 82 kg Human')
+# times <- seq(0, 10, 0.1)
+# out <- ode(y = inits, times = times, func = ode.func, parms = params,
+#            events = events, method = "lsodes", atol = 1e-8, rtol = 1e-8)
 
-plot(out[,"time"], out[,"Aurine"], type = 'l',
-     xlab = 'Time (days)', ylab = 'Cumulative Urinary Excretion (ug)',
-     main = 'PFHxA Population Model - 82 kg Human')
+# plot(out[,"time"], out[,"Cserum"], type = 'l', log = 'y',
+#      xlab = 'Time (years)', ylab = 'Serum Concentration (ug/L)',
+#      main = 'PFBS Population Model - 70 kg Human')
+
 
 # ====================
 # Upload on Jaqpot
 # ====================
 # Subset of features to be displayed on the user interface
 # Concentrations (ug/L)
-# predicted.feats <- c("CR", "CVR", "CVK", "CPTC",
-#                       "Cfil", "CL", "CVL", "CA_free", "CA",
-#                      # Amounts/Masses (ug)
-#                      "AR", "AKb", "APTC", "Afil", "AL", "Aplas_free", "AST", "ASI",
-#                      "Aurine", "Afeces", "Abile",
-#                      # Mass balance
-#                      "Atissue", "Aloss", "Atotal")
+predicted.feats <- c("CR", "CVR", "CVK", "CPTC", 
+                      "Cfil", "CL", "CVL", "CA_free", "CA",
+                     # Amounts/Masses (ug)
+                     "AR", "AKb", "APTC", "Afil", "AL", "Aplas_free", "AST", "ASI",
+                     "Aurine", "Afeces", "Abile",
+                     # Mass balance
+                     "Atissue", "Aloss", "Atotal")
 
-# jaqpotr::deploy.pbpk(user.input = user_input,out.vars = predicted.feats,
-# create.params = create.params,  create.inits = create.inits,
-# create.events = create.events, custom.func = custom.func,
-# envFile = "/Users/vassilis/Documents/GitHub/jaqpotpy/.env")
+jaqpotr::deploy.pbpk(user.input = user_input,out.vars = predicted.feats,
+create.params = create.params,  create.inits = create.inits,
+create.events = create.events, custom.func = custom.func,
+envFile = "/Users/vassilis/Documents/GitHub/jaqpotpy/.env")

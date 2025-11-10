@@ -19,7 +19,7 @@ println("="^80)
 
 # Load partition coefficients
 println("\nLoading partition coefficients...")
-partition_data = CSV.read("Population_model/partition_coefficients_results.csv", DataFrame)
+partition_data = CSV.read("PFAS_models/partition_coefficients_results.csv", DataFrame)
 pfhxa_partitions = filter(row -> row.Compound == "PFHxA", partition_data)
 PL = pfhxa_partitions[pfhxa_partitions.Tissue .== "liver", :Partition_Coefficient][1]
 PK = pfhxa_partitions[pfhxa_partitions.Tissue .== "kidney", :Partition_Coefficient][1]
@@ -32,7 +32,7 @@ println("    Rest of body:blood (PR) = $(round(PR, digits=4))")
 
 # Load plasma data
 println("\nLoading plasma data...")
-data = CSV.read("Population_model/PFHxA/digitized_data/Abraham_2024_plasma_data.csv", DataFrame)
+data = CSV.read("PFAS_models/PFHxA/digitized_data/Abraham_2024_plasma_data.csv", DataFrame)
 
 # Rename concentration column for consistency
 rename!(data, Symbol("C_plasma_ug/L") => :C_plasma)
@@ -246,7 +246,7 @@ scatter!(p, observation_times, data.C_plasma,
         markercolor=:red,
         markerstrokewidth=0)
 
-output_file = "Population_model/PFHxA/check_odes_plasma_plot.png"
+output_file = "PFAS_models/PFHxA/check_odes_plasma_plot.png"
 savefig(p, output_file)
 println("\n  Plasma concentration plot saved to: $output_file")
 
@@ -261,7 +261,7 @@ p_stomach = plot(time_pred, AST_pred,
                 size=(900, 600),
                 legend=:topright)
 
-output_file_stomach = "Population_model/PFHxA/check_odes_stomach_plot.png"
+output_file_stomach = "PFAS_models/PFHxA/check_odes_stomach_plot.png"
 savefig(p_stomach, output_file_stomach)
 println("  Stomach compartment plot saved to: $output_file_stomach")
 
@@ -276,7 +276,7 @@ p_intestine = plot(time_pred, ASI_pred,
                   size=(900, 600),
                   legend=:topright)
 
-output_file_intestine = "Population_model/PFHxA/check_odes_intestine_plot.png"
+output_file_intestine = "PFAS_models/PFHxA/check_odes_intestine_plot.png"
 savefig(p_intestine, output_file_intestine)
 println("  Small intestine compartment plot saved to: $output_file_intestine")
 
@@ -291,7 +291,7 @@ p_liver = plot(time_pred, AL_pred,
               size=(900, 600),
               legend=:topright)
 
-output_file_liver = "Population_model/PFHxA/check_odes_liver_plot.png"
+output_file_liver = "PFAS_models/PFHxA/check_odes_liver_plot.png"
 savefig(p_liver, output_file_liver)
 println("  Liver compartment plot saved to: $output_file_liver")
 
@@ -306,7 +306,7 @@ p_urine = plot(time_pred, Aurine_pred,
               size=(900, 600),
               legend=:bottomright)
 
-output_file_urine = "Population_model/PFHxA/check_odes_urine_plot.png"
+output_file_urine = "PFAS_models/PFHxA/check_odes_urine_plot.png"
 savefig(p_urine, output_file_urine)
 println("  Urine compartment plot saved to: $output_file_urine")
 
@@ -321,7 +321,7 @@ p_feces = plot(time_pred, Afeces_pred,
               size=(900, 600),
               legend=:bottomright)
 
-output_file_feces = "Population_model/PFHxA/check_odes_feces_plot.png"
+output_file_feces = "PFAS_models/PFHxA/check_odes_feces_plot.png"
 savefig(p_feces, output_file_feces)
 println("  Feces compartment plot saved to: $output_file_feces")
 
@@ -336,7 +336,7 @@ p_u18_over_Free = plot(time_pred, Aplas_free_over_Free_pred,
                       size=(900, 600),
                       legend=:topright)
 
-output_file_u18 = "Population_model/PFHxA/check_odes_u18_over_Free_plot.png"
+output_file_u18 = "PFAS_models/PFHxA/check_odes_u18_over_Free_plot.png"
 savefig(p_u18_over_Free, output_file_u18)
 println("  u[18]/Free plot saved to: $output_file_u18")
 
@@ -351,7 +351,7 @@ p_rest = plot(time_pred, AR_pred,
              size=(900, 600),
              legend=:topright)
 
-output_file_rest = "Population_model/PFHxA/check_odes_rest_body_plot.png"
+output_file_rest = "PFAS_models/PFHxA/check_odes_rest_body_plot.png"
 savefig(p_rest, output_file_rest)
 println("  Rest of body compartment plot saved to: $output_file_rest")
 
@@ -366,7 +366,7 @@ p_kidney_blood = plot(time_pred, AKb_pred,
                      size=(900, 600),
                      legend=:topright)
 
-output_file_kb = "Population_model/PFHxA/check_odes_kidney_blood_plot.png"
+output_file_kb = "PFAS_models/PFHxA/check_odes_kidney_blood_plot.png"
 savefig(p_kidney_blood, output_file_kb)
 println("  Kidney blood compartment plot saved to: $output_file_kb")
 
@@ -381,7 +381,7 @@ p_ptc = plot(time_pred, APTC_pred,
             size=(900, 600),
             legend=:topright)
 
-output_file_ptc = "Population_model/PFHxA/check_odes_PTC_plot.png"
+output_file_ptc = "PFAS_models/PFHxA/check_odes_PTC_plot.png"
 savefig(p_ptc, output_file_ptc)
 println("  PTC compartment plot saved to: $output_file_ptc")
 
@@ -396,7 +396,7 @@ p_filtrate = plot(time_pred, Afil_pred,
                  size=(900, 600),
                  legend=:topright)
 
-output_file_fil = "Population_model/PFHxA/check_odes_filtrate_plot.png"
+output_file_fil = "PFAS_models/PFHxA/check_odes_filtrate_plot.png"
 savefig(p_filtrate, output_file_fil)
 println("  Filtrate compartment plot saved to: $output_file_fil")
 
@@ -406,5 +406,5 @@ println("="^80)
 println("\nTo test different parameter values:")
 println("  1. Edit lines 60-61 in this file")
 println("  2. Change RAFapi and/or Km_apical values")
-println("  3. Run the script again: julia Population_model/PFHxA/check_odes.jl")
+println("  3. Run the script again: julia PFAS_models/PFHxA/check_odes.jl")
 println("="^80)

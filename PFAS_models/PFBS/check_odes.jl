@@ -18,7 +18,7 @@ println("="^80)
 
 # Load partition coefficients
 println("\nLoading partition coefficients...")
-partition_data = CSV.read("Population_model/partition_coefficients_results.csv", DataFrame)
+partition_data = CSV.read("PFAS_models/partition_coefficients_results.csv", DataFrame)
 pfbs_partitions = filter(row -> row.Compound == "PFBS", partition_data)
 PL = pfbs_partitions[pfbs_partitions.Tissue .== "liver", :Partition_Coefficient][1]
 PK = pfbs_partitions[pfbs_partitions.Tissue .== "kidney", :Partition_Coefficient][1]
@@ -36,7 +36,7 @@ subject_data = []
 
 for i in 1:n_subjects
     # Read CSV file
-    data = CSV.read("Population_model/PFBS/digitized_data/subject_$i.csv", DataFrame)
+    data = CSV.read("PFAS_models/PFBS/digitized_data/subject_$i.csv", DataFrame)
 
     # Round time to remove decimals
     data.Time_days = round.(data.Time_days)
@@ -229,7 +229,7 @@ for i in 1:n_subjects
 end
 
 # Save serum concentration plot
-output_file = "Population_model/PFBS/check_odes_serum_plot.png"
+output_file = "PFAS_models/PFBS/check_odes_serum_plot.png"
 savefig(p, output_file)
 println("\nSerum concentration plot saved to: $output_file")
 
@@ -249,7 +249,7 @@ for i in 1:n_subjects
 end
 
 # Save urine plot
-output_file_urine = "Population_model/PFBS/check_odes_urine_plot.png"
+output_file_urine = "PFAS_models/PFBS/check_odes_urine_plot.png"
 savefig(p_urine, output_file_urine)
 println("Urine excretion plot saved to: $output_file_urine")
 
@@ -269,7 +269,7 @@ for i in 1:n_subjects
 end
 
 # Save A8 plot
-output_file_a8 = "Population_model/PFBS/check_odes_A8_plot.png"
+output_file_a8 = "PFAS_models/PFBS/check_odes_A8_plot.png"
 savefig(p_a8, output_file_a8)
 println("Compartment 8 plot saved to: $output_file_a8")
 
@@ -289,7 +289,7 @@ for i in 1:n_subjects
 end
 
 # Save A9 plot
-output_file_a9 = "Population_model/PFBS/check_odes_A9_plot.png"
+output_file_a9 = "PFAS_models/PFBS/check_odes_A9_plot.png"
 savefig(p_a9, output_file_a9)
 println("Compartment 9 plot saved to: $output_file_a9")
 

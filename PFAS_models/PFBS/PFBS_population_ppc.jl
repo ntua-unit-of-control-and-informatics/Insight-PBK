@@ -18,7 +18,7 @@ println("POSTERIOR PREDICTIVE CHECK - HIERARCHICAL POPULATION MODEL PFBS")
 println("="^80)
 
 # Create output directory
-output_dir = "Population_model/PFBS/PPC_hierarchical"
+output_dir = "PFAS_models/PFBS/PPC_hierarchical"
 if !isdir(output_dir)
     mkpath(output_dir)
     println("\nCreated output directory: $output_dir")
@@ -26,11 +26,11 @@ end
 
 # Load MCMC chains from hierarchical model
 println("\nLoading MCMC chains...")
-chains = deserialize("Population_model/PFBS/PFBS_population_chains.jls")
+chains = deserialize("PFAS_models/PFBS/PFBS_population_chains.jls")
 
 # Load partition coefficients
 println("Loading partition coefficients...")
-partition_data = CSV.read("Population_model/partition_coefficients_results.csv", DataFrame)
+partition_data = CSV.read("PFAS_models/partition_coefficients_results.csv", DataFrame)
 pfbs_partitions = filter(row -> row.Compound == "PFBS", partition_data)
 PL = pfbs_partitions[pfbs_partitions.Tissue .== "liver", :Partition_Coefficient][1]
 PK = pfbs_partitions[pfbs_partitions.Tissue .== "kidney", :Partition_Coefficient][1]
@@ -48,7 +48,7 @@ subject_data = []
 
 for i in 1:n_subjects
     # Read CSV file
-    data = CSV.read("Population_model/PFBS/digitized_data/subject_$i.csv", DataFrame)
+    data = CSV.read("PFAS_models/PFBS/digitized_data/subject_$i.csv", DataFrame)
 
     # Round time to remove decimals
     data.Time_days = round.(data.Time_days)

@@ -11,7 +11,7 @@ println("="^80)
 
 # Load MCMC chains (choose which file to load)
 println("\nLoading MCMC chains...")
-chains = deserialize("Population_model/PFHxA/PFHxA_with_urine_chains.jls")  # or PFHxA_chains.jls
+chains = deserialize("PFAS_models/PFHxA/PFHxA_with_urine_chains.jls")  # or PFHxA_chains.jls
 println("✓ Chains loaded successfully")
 
 # Display summary statistics
@@ -103,8 +103,8 @@ println("="^80)
 chains_plot = plot(chains, size=(1800, 2800), dpi=300,
                     left_margin=25Plots.mm, bottom_margin=8Plots.mm,
                     top_margin=6Plots.mm, right_margin=6Plots.mm)
-savefig(chains_plot, "Population_model/PFHxA/PFHxA_population_diagnostic_plots.png")
-println("✓ Saved to: Population_model/PFHxA/PFHxA_population_diagnostic_plots.png")
+savefig(chains_plot, "PFAS_models/PFHxA/PFHxA_population_diagnostic_plots.png")
+println("✓ Saved to: PFAS_models/PFHxA/PFHxA_population_diagnostic_plots.png")
 
 println("\n" * "="^80)
 println("DIAGNOSTICS COMPLETE")

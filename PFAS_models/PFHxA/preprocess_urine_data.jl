@@ -6,7 +6,7 @@ println("PREPROCESS PFHxA URINE DATA")
 println("="^80)
 
 # Load digitized urine data
-data = CSV.read("Population_model/PFHxA/digitized_data/Abraham_2024_urine_data.csv", DataFrame)
+data = CSV.read("PFAS_models/PFHxA/digitized_data/Abraham_2024_urine_data.csv", DataFrame)
 # Use excretion rates (ug/hour) to estimate the absolute amount excreted in each time interval
 # transforme excretion rates from ug/hour to ug/day
 data.excretion_ug_h = data.excretion_ug_h .* 24.0
@@ -25,4 +25,4 @@ for row in 1:nrow(data)
 end
 
 # Save preprocessed data
-CSV.write("Population_model/PFHxA/digitized_data/Abraham_2024_urine_data_processed.csv", data)
+CSV.write("PFAS_models/PFHxA/digitized_data/Abraham_2024_urine_data_processed.csv", data)

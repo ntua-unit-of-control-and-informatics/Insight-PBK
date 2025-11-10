@@ -34,7 +34,7 @@ println("="^80)
 
 # Load partition coefficients
 println("\nLoading partition coefficients...")
-partition_data = CSV.read("Population_model/partition_coefficients_results.csv", DataFrame)
+partition_data = CSV.read("PFAS_models/partition_coefficients_results.csv", DataFrame)
 pfhxa_partitions = filter(row -> row.Compound == "PFHxA", partition_data)
 PL = pfhxa_partitions[pfhxa_partitions.Tissue .== "liver", :Partition_Coefficient][1]
 PK = pfhxa_partitions[pfhxa_partitions.Tissue .== "kidney", :Partition_Coefficient][1]
@@ -47,7 +47,7 @@ println("    Rest of body:blood (PR) = $(round(PR, digits=4))")
 
 # Load plasma data
 println("\nLoading plasma data...")
-plasma_data = CSV.read("Population_model/PFHxA/digitized_data/Abraham_2024_plasma_data.csv", DataFrame)
+plasma_data = CSV.read("PFAS_models/PFHxA/digitized_data/Abraham_2024_plasma_data.csv", DataFrame)
 rename!(plasma_data, Symbol("C_plasma_ug/L") => :C_plasma)
 plasma_data = dropmissing(plasma_data)
 plasma_data.log_C_plasma = log.(plasma_data.C_plasma)
@@ -57,7 +57,7 @@ println("  Time range: $(minimum(plasma_data.Time_days)) - $(maximum(plasma_data
 
 # Load urine data
 println("\nLoading urine data...")
-urine_data = CSV.read("Population_model/PFHxA/digitized_data/Abraham_2024_urine_data_processed.csv", DataFrame)
+urine_data = CSV.read("PFAS_models/PFHxA/digitized_data/Abraham_2024_urine_data_processed.csv", DataFrame)
 urine_data = dropmissing(urine_data)
 urine_data.log_Cumulative_Excretion = log.(urine_data.Cumulative_Excretion_ug)
 
@@ -266,7 +266,7 @@ println("="^80)
 # Save results
 println("\nSaving MCMC results...")
 using Serialization
-output_dir = "Population_model/PFHxA"
+output_dir = "PFAS_models/PFHxA"
 mkpath(output_dir)  # Create directory if it doesn't exist
 
 serialize("$output_dir/PFHxA_with_urine_chains.jls", chains)
