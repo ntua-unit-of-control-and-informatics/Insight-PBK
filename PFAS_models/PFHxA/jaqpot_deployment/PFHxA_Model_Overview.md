@@ -4,7 +4,21 @@
 
 This document describes a **physiologically-based pharmacokinetic (PBK) model** for PFHxA (perfluorohexanoic acid), a PFAS compound. The model predicts how PFHxA moves through the human body over time - how it's absorbed, distributed to different organs, and eliminated through urine and feces.
 
+**Model Structure**: The PBK model follows the same compartmental structure as **Worley et al. (2017)**, which was originally developed for PFOA and includes active renal reabsorption mechanisms.
+
 Think of it like a detailed map of PFHxA's journey through the body, with mathematical equations describing the speed and direction of travel at each step.
+
+---
+
+## Model Implementation and Deployment
+
+**Training**: The model parameters were estimated using a **Bayesian framework** with MCMC sampling (see Statistical Model section below). This approach provides full uncertainty quantification for all parameters.
+
+**Deployment**: The Jaqpot deployment provides **deterministic predictions** using the mean posterior estimates from the Bayesian calibration. This means:
+- Predictions are made with fixed parameter values (no uncertainty propagation)
+- Fast and efficient for real-time predictions
+- Parameter uncertainty is not reflected in the output
+- Suitable for point predictions and scenario testing
 
 ---
 
