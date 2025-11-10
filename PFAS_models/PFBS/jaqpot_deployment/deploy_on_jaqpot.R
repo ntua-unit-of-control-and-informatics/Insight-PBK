@@ -360,4 +360,4 @@ predicted.feats <- c("CR", "CVR", "CVK", "CPTC",
 jaqpotr::deploy.pbpk(user.input = user_input,out.vars = predicted.feats,
 create.params = create.params,  create.inits = create.inits,
 create.events = create.events, custom.func = custom.func,
-envFile = "/Users/vassilis/Documents/GitHub/jaqpotpy/.env")
+envFile = ".env")
