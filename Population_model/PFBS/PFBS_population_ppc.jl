@@ -276,7 +276,9 @@ println("\n" * "="^80)
 println("CREATING MULTI-PANEL PLOT")
 println("="^80)
 
-p = plot(layout=(3, 2), size=(1400, 1200), legend=:topright)
+p = plot(layout=(3, 2), size=(1500, 1300), legend=:topright,
+         left_margin=8Plots.mm, bottom_margin=6Plots.mm,
+         top_margin=4Plots.mm, right_margin=4Plots.mm)
 
 for (idx, pred_data) in enumerate(all_predictions)
     subject_idx = pred_data.subject_idx

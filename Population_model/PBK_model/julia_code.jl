@@ -64,7 +64,7 @@ function create_params_worley(user_input; RAF_baso=nothing, RAF_api=nothing)
     Free = substance_params.Free  # Free fraction in plasma
 
     # Kidney Transport Parameters
-    Vmax_baso_invitro = 3000.0 #439.2  # Vmax of basolateral transporter (pmol/mg protein/min)
+    Vmax_baso_invitro = 439.2  # Vmax of basolateral transporter (pmol/mg protein/min)
     if substance == "PFOA"
         Km_baso = 20100.0  # Km of basolateral transporter (ug/L)
     elseif substance == "PFBS"
@@ -80,7 +80,7 @@ function create_params_worley(user_input; RAF_baso=nothing, RAF_api=nothing)
         # as Km_PFHxA = Km_PFHpA * Uptake_rate_PFHxA / Uptake_rate_PFHpA * MW_PFHxA (MW_PFHxA = 314.05 g/mol)
         # where Km_PFHpA = 50.5 uM, Uptake_rate_PFHxA = 5.58 and Uptake_rate_PFHpA = 3.15
     end
-    Vmax_apical_invitro = 3740.0 #37400.0  # Vmax of apical transporter (pmol/mg protein/min)
+    Vmax_apical_invitro = 37400.0  # Vmax of apical transporter (pmol/mg protein/min)
     Km_apical = 77500.0  # Km of apical transporter (ug/L)
 
     # Use provided RAF values or defaults
