@@ -1,38 +1,80 @@
 # Insight-PBK
 
-Physiologically-based pharmacokinetic (PBK) modeling for PFAS compounds (PFBS and PFHxA) developed for the Insight EU Project. This work implements the Worley PBK model with active renal reabsorption to estimate transporter activity parameters from biomonitoring data.
+Repository of physiologically-based pharmacokinetic (PBK) models for various chemical compounds developed for the Insight EU Project. This collection includes PBK models for acetone, toluene diisocyanate (TDI), ethylene glycol (EG), and PFAS compounds (PFBS and PFHxA).
 
-## Overview
+## Available Models
 
-This repository focuses on modeling renal reabsorption mechanisms in PFAS compounds using Bayesian inference to calibrate transporter activity factors from synthetic steady-state observations.
+### 1. Acetone PBK Model (Mork and Johanson, 2006)
 
-### Key Components
+Physiologically-based pharmacokinetic model for acetone exposure based on the Mork and Johanson (2006) framework. The model describes acetone distribution and elimination following inhalation or oral exposure.
 
-- **Worley PBK Model**: Compartmental model with active renal reabsorption (basolateral and apical transporters)
-- **Abraham Model**: One-compartment model for reverse dosimetry to estimate daily intake from serum concentrations
-- **EDM Partition Coefficients**: Allendorf equilibrium distribution model for tissue:blood partition coefficients
+**Location**: `Mork and Johanson,2006/`
 
-### Workflow
+**Implementation**: R (deSolve)
 
-1. **Intake Estimation**: Reverse dosimetry with Abraham model to estimate daily PFAS intake
-2. **Partition Coefficients**: Calculate tissue:blood ratios using EDM from tissue composition data
-3. **Bayesian Calibration**: MCMC estimation of apical transporter activity (RAFapi) with Turing.jl
-4. **Model Validation**: Posterior predictive checks with 95% prediction intervals
+**Deployment**: Includes Jaqpot deployment version (`Acetone_PBK_model_Jaqpot.R`)
 
-### Implementation
+### 2. TDI PBK Model (Scholten et al. 2023)
 
-- **Language**: Julia
-- **Inference**: NUTS sampler (Turing.jl)
-- **Model Structure**: Continuous oral exposure with log-normal observation error
-- **Compounds**: PFBS and PFHxA
+PBK model for toluene diisocyanate (TDI) exposure based on Scholten et al. (2023). The model captures TDI kinetics and metabolism following inhalation exposure.
+
+**Location**: `Scholten et al.2023/`
+
+**Implementation**: R (deSolve)
+
+**Deployment**: Includes Jaqpot deployment version (`Scholten_TDI_Model_Jaqpot upload.R`)
+
+### 3. Ethylene Glycol PBK Model (Corley et al. 2005)
+
+PBK model for ethylene glycol (EG) based on Corley et al. (2005). The model describes EG distribution, metabolism, and elimination following oral exposure.
+
+**Location**: `Corley et al.2005/`
+
+**Implementation**: R (deSolve)
+
+**Deployment**: Includes Jaqpot deployment version (`Corley_et_al_2005_model_jaqpot upload.R`)
+
+### 4. PFAS PBK Models (PFBS and PFHxA)
+
+Physiologically-based pharmacokinetic models for PFAS compounds implementing the Worley model with active renal reabsorption. These models use Bayesian inference to estimate transporter activity parameters from biomonitoring data.
+
+**Location**: `PFAS_models/`
+
+**Implementation**: Julia (DifferentialEquations.jl, Turing.jl) with R deployment versions
+
+**Compounds**:
+- **PFBS**: Hierarchical Bayesian model for population-level analysis (6 subjects)
+- **PFHxA**: Non-hierarchical Bayesian model for single-subject analysis
+
+**Key Features**:
+- Active renal reabsorption mechanisms (basolateral and apical transporters)
+- MCMC parameter estimation using NUTS sampler
+- Posterior predictive checks for model validation
+- Separate observation errors for plasma and urine data (PFHxA)
+
+**Deployment**: Both models include Jaqpot deployment versions in their respective `jaqpot_deployment/` directories
+
+### 5. Partition Coefficient Calculator (EDM)
+
+Implementation of the Allendorf Equilibrium Distribution Model (EDM) for calculating tissue:blood partition coefficients from tissue composition data.
+
+**Location**: `EDM_Partition_Coefficients/`
+
+**Implementation**: Julia
+
+**Purpose**: Generates partition coefficients for liver, kidney, and rest of body compartments used in PBK models
 
 ## Project Structure
 
 ```
-Worley_model/
-├── PBK_model/          # Core PBK model functions
-├── PFBS/               # PFBS calibration and validation
-└── PFHxA/              # PFHxA calibration and validation
-
-EDM_Partition_Coefficients/  # Partition coefficient calculations
+Insight-PBK/
+├── Mork and Johanson,2006/      # Acetone PBK model
+├── Scholten et al.2023/          # TDI PBK model
+├── Corley et al.2005/            # Ethylene glycol PBK model
+├── PFAS_models/                  # PFAS PBK models
+│   ├── PFBS/                     # PFBS hierarchical model
+│   │   └── jaqpot_deployment/    # R code for Jaqpot
+│   └── PFHxA/                    # PFHxA non-hierarchical model
+│       └── jaqpot_deployment/    # R code for Jaqpot
+└── EDM_Partition_Coefficients/   # Partition coefficient calculations
 ```
